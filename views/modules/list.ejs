@@ -1,0 +1,56 @@
+<h3>فهرست</h3>
+<div id="list">
+    بارگزاری
+</div>
+
+<script>
+    function render_list() {
+        $("#list").html(" ")
+
+        let temp = [...global_db.transaction].reverse();
+
+        temp.forEach((row, index) => {
+            let date = new Date(row.date).getFullYear() + "/" + new Date(row.date).getMonth() + "/" + new Date(row.date).getDate();
+            if (row.type == "in") {
+                $("#list").append(`<div class="card">
+                                        <div class="card-header bg-success text-white">${global_db.income_categories[row.category]} <button class="btn btn-sm btn-danger float-start" onclick="remove_transaction(${index})">حذف</button></div>
+                                        <div class="card-body">
+                                            <p><b>${row.amount} تومان</b></p>
+                                            <p>تاریخ : ${date}</p>
+                                            <small>توضیح : ${row.description}</small>
+                                        </div>
+                                    </div>`)
+
+            } else {
+                $("#list").append(`<div class="card">
+                                        <div class="card-header">${global_db.categories[row.category]} <button class="btn btn-sm btn-danger float-start" onclick="remove_transaction(${index})">حذف</button></div>
+                                        <div class="card-body">
+                                            <p><b>${row.amount} تومان</b></p>
+                                            <p>تاریخ : ${date}</p>
+                                            <small>توضیح : ${row.description}</small>
+                                        </div>
+                                    </div>`)
+            }
+        });
+    }
+
+    function remove_transaction(itemIndex) {
+        let full_length = global_db.transaction.length - 1;
+
+        global_db.transaction = global_db.transaction.filter(function(row, index) {
+            console.log((full_length - index), itemIndex)
+            if ((full_length - index) != itemIndex) {
+                return row
+            }
+        })
+
+        render_list()
+        update_db()
+    }
+</script>
+
+<style>
+    .card {
+        margin-bottom: 22px;
+    }
+</style>

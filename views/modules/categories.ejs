@@ -1,0 +1,52 @@
+<h3>اضافه کردن دسته‌بندی</h3>
+
+<form class="row graphform" onsubmit="add_cate(event)">
+    <div class="col-sm-3 col-md-4">
+        <label class="form-label">دسته‌بندی</label>
+        <select class="form-select" name="cateType">
+            <option value="0">دست‌بندی انتخاب کنید</option>
+            <option value="in">درآمد</option>
+            <option value="out">هزینه</option>
+        </select>
+
+        <br/>
+    </div>
+
+    <div class="col-sm-3 col-md-4">
+        <label class="form-label">نام دسته‌بندی</label>
+        <input type="input" class="form-control" name="cateName" />
+        <Br/>
+    </div>
+
+    <div class="col-sm-3 col-md-6">
+        <button class="btn btn-success" type="submit">ثبت</button>
+        <div id="submitError"></div>
+
+    </div>
+</form>
+
+<script>
+    function add_cate(event) {
+        event.preventDefault();
+
+        let cateName = $("[name='cateName']").val();
+        if (cateName.length == 0) return
+
+        let cateType = $("[name='cateType']").val();
+
+        console.log(cateType, cateName)
+
+        if (cateType == "in") {
+            global_db.income_categories.push($("[name='cateName']").val())
+            submit_error(true, `انجام شد.`)
+        } else if (cateType == "out") {
+            global_db.categories.push($("[name='cateName']").val())
+            submit_error(true, `انجام شد.`)
+        } else {
+            return
+        }
+
+        update_db();
+        init()
+    }
+</script>

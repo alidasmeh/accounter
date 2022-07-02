@@ -1,0 +1,238 @@
+<!-- PieChart for Cost and Income  -->
+
+
+<h3>گراف</h3>
+
+<form class="row graphform" onsubmit="show_a_graph(event)">
+    <div class="col-sm-3 col-md-4">
+        <label class="form-label">نوع گراف</label>
+        <select class="form-select" name="graphtype">
+            <option value="pie">پای چارت</option>
+            <option value="line">خطی</option>
+        </select>
+
+        <br/>
+    </div>
+
+    <div class="col-sm-3 col-md-4">
+        <label class="form-label">طول زمان</label>
+        <select class="form-select" name="duration">
+            <option value="week">هفته</option>
+            <option value="twoweek">دو هفته</option>
+            <option value="month">ماه</option>
+            <option value="twomonth">دو ماه</option>
+        </select>
+
+        <br/>
+    </div>
+    <div class="col-sm-3 col-md-4">
+        <label class="form-label">منتهی به تاریخ : </label>
+        <input type="date" class="form-select" name="lastday" />
+        <Br/>
+    </div>
+    <div class="col-sm-3 col-md-6">
+        <button class="btn btn-success" type="submit">نمایش</button>
+    </div>
+</form>
+
+
+<div id="show_chart_here">
+</div>
+
+
+<script>
+    const genRanHex = size => [...Array(size)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+
+
+    function show_a_graph(event) {
+        event.preventDefault()
+
+        let type = $(".graphform [name='graphtype']").val();
+
+        if (type == 'line') {
+            line_chart()
+        } else if (type == 'pie') {
+            pie_chart()
+        }
+
+
+    }
+
+    function pie_chart() {
+        let duration = $(".graphform [name='duration']").val();
+        if (duration == "week") duration = 7
+        if (duration == "twoweek") duration = 14
+        if (duration == "month") duration = 30
+        if (duration == "twomonth") duration = 60
+
+
+        let lastday = ($(".graphform [name='lastday']").val()).split("-");
+        if (lastday.length != 3) {
+            alert("تاریخ انتهایی را مشخص کنید.")
+            return
+        }
+        lastday = new Date(lastday[0], lastday[1] - 1, lastday[2]);
+        lastday_time = lastday.getTime()
+
+        let endDate = lastday_time + 86400000;
+        let startDate = lastday_time - (86400000 * duration)
+
+        let labels = [];
+        let cate_data = []
+        let colors = [];
+        global_db.categories.forEach((row, categoryIndex) => {
+            labels.push(row);
+
+            let total_in_this_cate = 0;
+
+            global_db.transaction.forEach(transaction => {
+                if (transaction.category == categoryIndex && (transaction.date > startDate && transaction.date < endDate)) {
+                    total_in_this_cate += transaction.amount
+                }
+            })
+
+            cate_data.push(total_in_this_cate);
+            colors.push("#" + genRanHex(6))
+        })
+
+        const data = {
+            labels,
+            datasets: [{
+                label: '',
+                data: cate_data,
+                backgroundColor: colors,
+                hoverOffset: 4
+            }]
+        };
+        const config = {
+            type: 'pie',
+            data: data,
+        };
+
+        $(`#show_chart_here`).html(` `).append(`<canvas  id="show_chart_here_canvas"></canvas>`);
+        let selector = document.getElementById("show_chart_here_canvas").getContext('2d');
+
+        let chart = new Chart(selector, config)
+    }
+
+    function line_chart() {
+        let duration = $(".graphform [name='duration']").val();
+        let lastday = ($(".graphform [name='lastday']").val()).split("-");
+
+        if (lastday.length != 3) {
+            alert("تاریخ انتهایی را مشخص کنید.")
+            return
+        }
+
+        let days_array = day_array_generator(duration, lastday);
+        let incomes_array = incomes_array_generator(days_array)
+        let outcomes_array = outcomes_array_generator(days_array)
+
+        const data = {
+            labels: days_array,
+            datasets: [{
+                label: 'در آمد',
+                data: incomes_array,
+                borderColor: 'rgba(66, 245, 185, 1)',
+                backgroundColor: 'rgba(66, 245, 185, 0.5)',
+                fill: true
+            }, {
+                label: 'هزینه',
+                data: outcomes_array,
+                borderColor: "rgba(245, 66, 129, 1)",
+                backgroundColor: "rgba(245, 66, 129, 0.5)",
+                fill: true
+
+            }, ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                bezierCurve: false,
+                scales: {
+                    y: {
+                        stacked: true
+                    }
+                },
+                plugins: {
+                    filler: {
+                        propagate: true
+                    },
+                    'samples-filler-analyser': {
+                        target: 'chart-analyser'
+                    }
+                },
+                interaction: {
+                    intersect: true,
+                },
+            },
+        };
+
+
+        $(`#show_chart_here`).html(` `).append(`<canvas  id="show_chart_here_canvas"></canvas>`);
+        let selector = document.getElementById("show_chart_here_canvas").getContext('2d');
+
+        let chart = new Chart(selector, config)
+    }
+
+    function day_array_generator(type, lastday) {
+        lastday = new Date(lastday[0], lastday[1] - 1, lastday[2]);
+        lastday_time = lastday.getTime()
+        let arr = []
+        let max_i = 0
+
+        if (type == 'week') max_i = 7;
+        if (type == 'twoweek') max_i = 30;
+        if (type == 'month') max_i = 30;
+        if (type == 'twomonth') max_i = 60;
+
+
+        for (let i = 0; i < max_i; i++) {
+            let temp = new Date(lastday - (86400000 * i))
+            temp = temp.getFullYear() + "/" + temp.getMonth() + "/" + temp.getDate();
+            arr.push(temp)
+        }
+
+        return arr.reverse()
+    }
+
+    function incomes_array_generator(days_array) {
+        let arr = []
+        let total_duration = 0;
+
+        days_array.forEach(targetDate => {
+
+            global_db.transaction.forEach(row => {
+                let date = new Date(row.date)
+                date = date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate();
+                if (row.type == "in" && date == targetDate) {
+                    total_duration += Number(row.amount)
+                }
+            });
+            arr.push(total_duration)
+        })
+
+        return arr;
+    }
+
+    function outcomes_array_generator(days_array) {
+        let arr = []
+        let total_duration = 0;
+
+        days_array.forEach(targetDate => {
+
+            global_db.transaction.forEach(row => {
+                let date = new Date(row.date)
+                date = date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate();
+                if (row.type == "out" && date == targetDate) {
+                    total_duration += Number(row.amount)
+                }
+            });
+            arr.push(total_duration)
+        })
+
+        return arr;
+    }
+</script>

@@ -1,0 +1,52 @@
+<h3>هزینه</h3>
+<form onsubmit="save_new_cost(event)" class="cost">
+    <div class="mb-3 mt-3">
+        <label class="form-label">دسته بندی</label>
+        <select class="form-select" name="categories">
+                </select>
+    </div>
+    <div class="mb-3 mt-3">
+        <label class="form-label">مبلغ به هزار تومان</label>
+        <input type="number" class="form-control" name="amount" placeholder="به تومان" style="text-align: center; direction:ltr;">
+    </div>
+
+    <div class="mb-3 mt-3">
+        <label class="form-label">از حساب</label>
+        <select class="form-select" name="banks">
+                </select>
+    </div>
+
+    <div class="mb-3 mt-3">
+        <label class="form-label">توضیحات</label>
+        <input type="text" class="form-control" name="description" placeholder="">
+    </div>
+
+    <div class="mb-3 mt-3">
+        <button type="submit" class="btn btn-primary">ثبت</button>
+        <div id="submitError"></div>
+    </div>
+
+
+</form>
+
+<script>
+    function save_new_cost(event) {
+        event.preventDefault();
+
+        let temp = {
+            type: "out",
+            category: Number($(".cost [name='categories']").val()),
+            description: $(".cost [name='description']").val(),
+            bank: Number($(".cost [name='banks']").val()),
+            amount: Number($(".cost [name='amount']").val()) * 1000,
+            date: (new Date()).getTime()
+        }
+
+        if (temp.amount == 0) {
+            alert("مقدار قابل قبول وارد کنید.")
+        }
+
+        global_db.transaction.push(temp);
+        update_db()
+    }
+</script>

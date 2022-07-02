@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounter</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
+
+</head>
+
+<body>
+
+    <div class="container mt-4">
+        <h1 style="text-align: center;">Accounter</h1>
+
+        <div class="tabs">
+            <button class="btn btn-primary active" data-tabName='cost' onclick="show_tab('cost')">هزینه</button>
+            <button class="btn btn-secondary" data-tabName='income' onclick="show_tab('income')">درآمد</button>
+            <button class="btn btn-secondary" data-tabName='list' onclick="show_tab('list');render_list()">فهرست</button>
+            <button class="btn btn-secondary" data-tabName='graph' onclick="show_tab('graph');">گراف</button>
+            <button class="btn btn-secondary" data-tabName='categories' onclick="show_tab('categories');">دسته بندی</button>
+        </div>
+        <hr>
+
+        <div class="pills">
+            <div class="pill active" data-tabName='cost'>
+                <%- include('modules/cost'); %>
+            </div>
+
+            <div class="pill" data-tabName='income'>
+                <%- include('modules/income'); %>
+            </div>
+
+            <div class="pill" data-tabName='list'>
+                <%- include('modules/list'); %>
+            </div>
+
+            <div class="pill" data-tabName='graph'>
+                <%- include('modules/graph'); %>
+            </div>
+
+            <div class="pill" data-tabName='categories'>
+                <%- include('modules/categories'); %>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script>
+        let global_db = []
+
+        function init() {
+            $("[name='banks']").html(" ")
+            $("[name='categories']").html(" ")
+
+            global_db.bank.forEach((row, index) => {
+                $("[name='banks']").append(`<option value="${index}">${row.name}</option>`);
+            })
+            global_db.categories.forEach((row, index) => {
+                $(".cost [name='categories']").append(`<option value="${index}">${row}</option>`);
+            })
+            global_db.income_categories.forEach((row, index) => {
+                $(".income [name='categories']").append(`<option value="${index}">${row}</option>`);
+            })
+        }
+
+        function update_db() {
+            $.post(
+                "updatedb", {
+                    db: JSON.stringify(global_db)
+                },
+                function(response) {
+                    if (response.status == false) {
+                        submit_error(false, "در ثبت اطلاعات خطا رخ داده است.")
+                        console.log(response)
+                    } else {
+                        submit_error(true, "با موفقیت ثبت شد.")
+                        console.log(`DB is updated successfully`);
+                    }
+                }
+            )
+        }
+
+        function get_db() {
+            $.get(
+                "/db",
+                function(response) {
+                    global_db = JSON.parse(response);
+                    init();
+                }
+            )
+        }
+
+        function submit_error(status, error) {
+
+            if (status) {
+                $("[name='amount']").val(null)
+                $("[name='description']").val(null)
+            } else {
+
+            }
+
+            $("#submitError").text(error);
+            setTimeout(function() {
+                $("#submitError").text(` `);
+            }, 1500)
+
+        }
+
+        function show_tab(tabName) {
+            $(".pills .pill").removeClass("active")
+            $(`.pills .pill[data-tabName='${tabName}']`).addClass("active");
+
+            $(".tabs .btn").removeClass("active").removeClass("btn-primary").addClass("btn-secondary")
+            $(`.tabs .btn[data-tabName='${tabName}']`).addClass("active").addClass("btn-primary").removeClass("btn-secondary");
+        }
+        get_db();
+    </script>
+
+    <style>
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        div,
+        span {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .pills .pill {
+            display: none;
+        }
+        
+        .pills .pill.active {
+            display: block;
+        }
+    </style>
+</body>
+
+</html>
