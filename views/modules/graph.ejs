@@ -125,25 +125,36 @@
         }
 
         let days_array = day_array_generator(duration, lastday);
-        let incomes_array = incomes_array_generator(days_array)
-        let outcomes_array = outcomes_array_generator(days_array)
+        // let incomes_array = incomes_array_generator(days_array)
+        // let outcomes_array = outcomes_array_generator(days_array)
+        let balance_array = balance_array_generator(days_array);
 
         const data = {
             labels: days_array,
-            datasets: [{
-                label: 'در آمد',
-                data: incomes_array,
-                borderColor: 'rgba(66, 245, 185, 1)',
-                backgroundColor: 'rgba(66, 245, 185, 0.5)',
-                fill: true
-            }, {
-                label: 'هزینه',
-                data: outcomes_array,
-                borderColor: "rgba(245, 66, 129, 1)",
-                backgroundColor: "rgba(245, 66, 129, 0.5)",
-                fill: true
+            datasets: [
+                //     {
+                //     label: 'در آمد',
+                //     data: incomes_array,
+                //     borderColor: 'rgba(66, 245, 185, 1)',
+                //     backgroundColor: 'rgba(66, 245, 185, 0.5)',
+                //     fill: true
+                // }, {
+                //     label: 'هزینه',
+                //     data: outcomes_array,
+                //     borderColor: "rgba(245, 66, 129, 1)",
+                //     backgroundColor: "rgba(245, 66, 129, 0.5)",
+                //     fill: true
 
-            }, ]
+                // }, 
+                {
+                    label: 'سطح کل',
+                    data: balance_array,
+                    borderColor: "rgba(50, 66, 129, 1)",
+                    backgroundColor: "rgba(50, 66, 129, 0.5)",
+                    fill: true
+
+                },
+            ]
         };
 
         const config = {
@@ -175,6 +186,31 @@
         let selector = document.getElementById("show_chart_here_canvas").getContext('2d');
 
         let chart = new Chart(selector, config)
+    }
+
+    function balance_array_generator(days_array) {
+        let arr = []
+        let total_duration = 0;
+
+        days_array.forEach(targetDate => {
+
+            global_db.transaction.forEach(row => {
+                let date = new Date(row.date)
+                date = date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate();
+                if (date == targetDate) {
+                    if (row.type == "in") {
+                        total_duration += Number(row.amount);
+                        console.log(targetDate + " in");
+                    } else if (row.type == "out") {
+                        total_duration -= Number(row.amount);
+                        console.log(targetDate + " out");
+                    }
+                }
+            });
+            arr.push(total_duration)
+        })
+
+        return arr;
     }
 
     function day_array_generator(type, lastday) {
